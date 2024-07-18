@@ -18,6 +18,25 @@ public class NetworkBigMouth
         BigMouthPlugin.instance.StartCoroutine(SetValue(networkId, value));
     }
     
+    [ClientRpc]
+    public static void SetBigMouthValueClientRpc(ulong networkId, int value)
+    {
+        var networkObjects = Object.FindObjectsByType<BigMouthEnemyAI>(FindObjectsSortMode.None);
+
+        BigMouthEnemyAI bigMouthEnemy = null;
+        
+        foreach (var g in networkObjects)
+        {
+            if (g.NetworkObjectId == networkId) bigMouthEnemy = g;
+        }
+        
+        if (bigMouthEnemy != null)
+        {
+            //Debug.Log($"BIG MOUTH FOUND {networkId} SET VALUE {value}");
+            bigMouthEnemy.SetValue(value);
+        }
+    }
+    
 
     public static IEnumerator SetValue(ulong networkId, int value)
     {

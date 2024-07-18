@@ -16,6 +16,8 @@ public class BigMouthEnemyAI: EnemyAI
 
     private bool deadAnimHaveBeenCalled;
 
+    private int value;
+
     private float sleepingTimer = 15f;
     private float searchTimer = 15f;
     private float attackPlayerTimer = 0;
@@ -35,15 +37,23 @@ public class BigMouthEnemyAI: EnemyAI
         GameObject teethObject = Instantiate(BigMouthPlugin.instance.teehGameObject,transform.position, Quaternion.identity);
         var networkObject = teethObject.GetComponent<NetworkObject>();
         networkObject.Spawn();
-        NetworkBigMouth.SetTeethValueClientRpc(networkObject.NetworkObjectId, Random.Range(50, 80));
+        NetworkBigMouth.SetTeethValueClientRpc(networkObject.NetworkObjectId, value );
         NetworkObject.Despawn();
 
+    }
+
+    public void SetValue(int value)
+    {
+        this.value = value;
+        var scanNode = GetComponentInChildren<ScanNodeProperties>();
+        scanNode.subText = $"Value: {value}";
     }
 
     
     public override void Start()
     {
         base.Start();
+        
         
         if (BigMouthPlugin.instance.teehGameObject == null)
         {
@@ -63,6 +73,8 @@ public class BigMouthEnemyAI: EnemyAI
                     }) 
             );
         }
+
+        if (IsServer) NetworkBigMouth.SetBigMouthValueClientRpc(NetworkObjectId, Random.Range(50, 98));
     }
 
     public override void Update()
