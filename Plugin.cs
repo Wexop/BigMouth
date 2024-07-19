@@ -20,7 +20,7 @@ namespace BigEyes
 
         const string GUID = "wexop.bigmouth";
         const string NAME = "BigMouth";
-        const string VERSION = "1.0.2";
+        const string VERSION = "1.0.3";
 
         public GameObject teehGameObject;
 

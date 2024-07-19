@@ -1,6 +1,6 @@
 {
   "name": "BigMouth",
-  "version_number": "1.0.2",
+  "version_number": "1.0.3",
   "website_url": "https://github.com/Wexop/BigMouth",
   "description": "[V50+] Add a new monster to the game. Be careful, sometimes an item can hide a monster...",
   "dependencies": [
