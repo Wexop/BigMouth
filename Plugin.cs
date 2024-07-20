@@ -21,9 +21,10 @@ namespace BigMouth
 
         const string GUID = "wexop.bigmouth";
         const string NAME = "BigMouth";
-        const string VERSION = "1.0.3";
+        const string VERSION = "1.1.0";
 
         public GameObject teehGameObject;
+        public List<string> everyScrapsItems = new List<string>();
 
         public static BigMouthPlugin instance;
 
@@ -40,6 +41,8 @@ namespace BigMouth
         
         public ConfigEntry<float> angrySpeed;
         public ConfigEntry<float> angryAcceleration;
+
+        public ConfigEntry<bool> canBeEveryItem;
 
         void Awake()
         {
@@ -66,6 +69,13 @@ namespace BigMouth
                 "Chance for BigMouth to spawn for any moon, example => assurance:100,offense:50 . You need to restart the game.");
 
             CreatStringConfig(spawnMoonRarity, true);
+            
+            //SPECIAL
+            
+            canBeEveryItem = Config.Bind("Custom Behavior", "canBeEveryItem", 
+                false, 
+                "Big Mouth can transform into any scrap items, even modded one. You don't need to restart the game !");
+            CreateBoolConfig(canBeEveryItem);
             
             //BEHAVIOR CONFIGS
                         
@@ -94,7 +104,7 @@ namespace BigMouth
                 "BigMouth attack player delay. You don't need to restart the game !");
             CreateFloatConfig(attackPlayerDelay, 0f, 5f);
             
-            attackDamage = Config.Bind("Custom Behavior", "attackPlayerDelay", 
+            attackDamage = Config.Bind("Custom Behavior", "attackDamage", 
                 5, 
                 "BigMouth attack player delay. You don't need to restart the game !");
             CreateIntConfig(attackDamage);
@@ -157,6 +167,15 @@ namespace BigMouth
         private void CreatStringConfig(ConfigEntry<string> configEntry, bool requireRestart = false)
         {
             var exampleSlider = new TextInputFieldConfigItem(configEntry, new TextInputFieldOptions()
+            {
+                RequiresRestart = requireRestart
+            });
+            LethalConfigManager.AddConfigItem(exampleSlider);
+        }
+        
+        private void CreateBoolConfig(ConfigEntry<bool> configEntry, bool requireRestart = false)
+        {
+            var exampleSlider = new BoolCheckBoxConfigItem(configEntry, new BoolCheckBoxOptions()
             {
                 RequiresRestart = requireRestart
             });

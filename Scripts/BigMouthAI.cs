@@ -1,4 +1,5 @@
 ﻿
+using System;
 using GameNetcodeStuff;
 using JetBrains.Annotations;
 using System.Collections;
@@ -6,6 +7,7 @@ using System.Linq;
 using BigMouth;
 using Unity.Netcode;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace BigEyes.Scripts;
 
@@ -14,7 +16,13 @@ public class BigMouthEnemyAI: EnemyAI
     
     public AudioClip angrySound;
     public AudioSource screamSound;
+    public GameObject TeethObjectContainer;
 
+    private GameObject fakeItemGameObject;
+    private ScanNodeProperties scanNode;
+
+    private bool haveAFakeItem;
+    
     private bool deadAnimHaveBeenCalled;
 
     private int value;
@@ -44,16 +52,54 @@ public class BigMouthEnemyAI: EnemyAI
     public void SetValue(int value)
     {
         this.value = value;
-        var scanNode = GetComponentInChildren<ScanNodeProperties>();
+        scanNode = GetComponentInChildren<ScanNodeProperties>();
         scanNode.subText = $"Value: {value}";
     }
 
-    
-    public override void Start()
+    public void SetFakeItemClient(GameObject gameObject)
     {
-        base.Start();
+        fakeItemGameObject = gameObject;
+        Debug.Log($"ROTATION {gameObject.transform.localEulerAngles} EULER {gameObject.transform.eulerAngles}");
+        var grabable = fakeItemGameObject.GetComponent<GrabbableObject>();
+        grabable.parentObject = null;
+        grabable.targetFloorPosition += Vector3.up * 3; 
         
         
+        //fakeItemGameObject.transform.localEulerAngles = gameObject.transform.localEulerAngles;
+        scanNode.gameObject.SetActive(false);
+        haveAFakeItem = true;
+        ChangeFakeItemState(false);
+    }
+
+    public void SetFakeItem(string name)
+    {
+        if(IsServer)
+        {
+            var fakeObject = FindNetworkGameObject(name);
+            fakeItemGameObject = Instantiate(fakeObject, TeethObjectContainer.transform.position, Quaternion.identity, transform);
+                
+            var scrapNetwork = fakeItemGameObject.GetComponent<NetworkObject>();
+            var grabable = fakeItemGameObject.GetComponent<GrabbableObject>();
+            grabable.parentObject = TeethObjectContainer.transform.parent;
+            scrapNetwork.Spawn();
+
+            var scrapMutliplier = RoundManager.Instance.scrapValueMultiplier;
+            
+            NetworkBigMouth.SetClientFakeItemClientRpc(NetworkObjectId, scrapNetwork.NetworkObjectId, Random.Range(  Mathf.RoundToInt(grabable.itemProperties.minValue * scrapMutliplier), Mathf.RoundToInt(grabable.itemProperties.maxValue * scrapMutliplier)));
+        }
+    }
+
+    public void ChangeFakeItemState(bool isAngry)
+    {
+        if(!haveAFakeItem) return;
+
+        TeethObjectContainer.SetActive(isAngry);
+        fakeItemGameObject.SetActive(!isAngry);
+        
+    }
+
+    public void GetNetworkPrefab()
+    {
         if (BigMouthPlugin.instance.teehGameObject == null)
         {
             NetworkManager.NetworkConfig.Prefabs.NetworkPrefabsLists.ForEach(
@@ -63,6 +109,7 @@ public class BigMouthEnemyAI: EnemyAI
                         GrabbableObject grabbableObject = prefab.Prefab.GetComponent<GrabbableObject>();
                         if (grabbableObject != null)
                         {
+                            if(grabbableObject.itemProperties.isScrap) BigMouthPlugin.instance.everyScrapsItems.Add(grabbableObject.itemProperties.itemName);
                             if (grabbableObject.itemProperties.itemName == "Teeth")
                             {
                                 BigMouthPlugin.instance.teehGameObject = prefab.Prefab;
@@ -72,8 +119,52 @@ public class BigMouthEnemyAI: EnemyAI
                     }) 
             );
         }
+    }
 
-        if (IsServer) NetworkBigMouth.SetBigMouthValueClientRpc(NetworkObjectId, Random.Range(BigMouthPlugin.instance.minTeethValue.Value, BigMouthPlugin.instance.maxTeethValue.Value));
+    public GameObject FindNetworkGameObject(string itemName)
+    {
+
+        GameObject gameObject = BigMouthPlugin.instance.teehGameObject;
+        
+        NetworkManager.NetworkConfig.Prefabs.NetworkPrefabsLists.ForEach(
+            list => list.PrefabList.ToList().ForEach(
+                prefab =>
+                {
+                    GrabbableObject grabbableObject = prefab.Prefab.GetComponent<GrabbableObject>();
+                    if (grabbableObject != null)
+                    {
+                        if (grabbableObject.itemProperties.itemName == itemName)
+                        {
+                            gameObject = prefab.Prefab;
+                        }
+                    } 
+
+                }) 
+        );
+
+        return gameObject;
+    }
+
+    
+    public override void Start()
+    {
+        base.Start();
+        agent.stoppingDistance = 1f;
+
+        GetNetworkPrefab();
+
+        if (IsServer)
+        {
+            NetworkBigMouth.SetBigMouthValueClientRpc(NetworkObjectId, Random.Range(BigMouthPlugin.instance.minTeethValue.Value, BigMouthPlugin.instance.maxTeethValue.Value));
+
+            if (BigMouthPlugin.instance.canBeEveryItem.Value)
+            {
+                NetworkBigMouth.SetBigFakeItemClientRpc(NetworkObjectId,
+                    BigMouthPlugin.instance.everyScrapsItems[
+                        Random.Range(0, BigMouthPlugin.instance.everyScrapsItems.Count)]);
+            }
+            
+        }
     }
 
     public override void Update()
@@ -96,6 +187,7 @@ public class BigMouthEnemyAI: EnemyAI
 
         if (lastBehaviorState != currentBehaviourStateIndex)
         {
+            ChangeFakeItemState(currentBehaviourStateIndex == 1);
             lastBehaviorState = currentBehaviourStateIndex;
             SetAnimation();
             if (currentBehaviourStateIndex == 1)
