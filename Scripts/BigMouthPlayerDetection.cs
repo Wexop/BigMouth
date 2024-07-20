@@ -1,4 +1,5 @@
 ﻿using System;
+using BigMouth;
 using UnityEngine;
 
 namespace BigEyes.Scripts;
@@ -6,7 +7,14 @@ namespace BigEyes.Scripts;
 public class BigMouthPlayerDetection: MonoBehaviour
 {
     public BigMouthEnemyAI MouthEnemyAI;
-    
+
+    public void Start()
+    {
+        var width = BigMouthPlugin.instance.playerDetectionDistance.Value;
+
+        transform.localScale = new Vector3(width, 4.65f, width);
+    }
+
     public void OnTriggerEnter(Collider other)
     {
         if(other.CompareTag("Player")) MouthEnemyAI.PlayerIsClose(true, other);

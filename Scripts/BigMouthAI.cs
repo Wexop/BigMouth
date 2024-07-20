@@ -3,6 +3,7 @@ using GameNetcodeStuff;
 using JetBrains.Annotations;
 using System.Collections;
 using System.Linq;
+using BigMouth;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -17,11 +18,9 @@ public class BigMouthEnemyAI: EnemyAI
     private bool deadAnimHaveBeenCalled;
 
     private int value;
-
-    private float sleepingTimer = 15f;
-    private float searchTimer = 15f;
+    
     private float attackPlayerTimer = 0;
-    private float chasePlayerTimer = 2f;
+    private float chasePlayerTimer = BigMouthPlugin.instance.chaseDuration.Value;
     public float aiInterval;
     public bool isPlayerClose;
     
@@ -74,7 +73,7 @@ public class BigMouthEnemyAI: EnemyAI
             );
         }
 
-        if (IsServer) NetworkBigMouth.SetBigMouthValueClientRpc(NetworkObjectId, Random.Range(50, 98));
+        if (IsServer) NetworkBigMouth.SetBigMouthValueClientRpc(NetworkObjectId, Random.Range(BigMouthPlugin.instance.minTeethValue.Value, BigMouthPlugin.instance.maxTeethValue.Value));
     }
 
     public override void Update()
@@ -131,7 +130,7 @@ public class BigMouthEnemyAI: EnemyAI
             if(player == null || player.isPlayerDead || isEnemyDead) return;
             if(PlayerIsTargetable(player))
             {
-                chasePlayerTimer = 4f;
+                chasePlayerTimer = BigMouthPlugin.instance.chaseDuration.Value;
                 SetMovingTowardsTargetPlayer(player);
                 SwitchToBehaviourClientRpc(1);
             }
@@ -168,8 +167,8 @@ public class BigMouthEnemyAI: EnemyAI
             }
             case 1:
             {
-                agent.speed = 8f;
-                agent.acceleration = 12f;
+                agent.speed = BigMouthPlugin.instance.angrySpeed.Value;
+                agent.acceleration = BigMouthPlugin.instance.angryAcceleration.Value;
                 
                 if (targetPlayer != null && PlayerIsTargetable(targetPlayer))
                 {
@@ -179,7 +178,7 @@ public class BigMouthEnemyAI: EnemyAI
                 {
                     if(isPlayerClose)
                     {
-                        chasePlayerTimer = 2f;
+                        chasePlayerTimer = BigMouthPlugin.instance.chaseDuration.Value / 2;
                         break;
                     }
                     PlayerIsClose(false, null);
@@ -228,8 +227,8 @@ public class BigMouthEnemyAI: EnemyAI
         var player = MeetsStandardPlayerCollisionConditions(other, false, true);
         if (player != null && attackPlayerTimer <= 0)
         {
-            player.DamagePlayer(5, causeOfDeath: CauseOfDeath.Crushing);
-            attackPlayerTimer = 0.25f;
+            player.DamagePlayer(BigMouthPlugin.instance.attackDamage.Value, causeOfDeath: CauseOfDeath.Crushing);
+            attackPlayerTimer = BigMouthPlugin.instance.attackPlayerDelay.Value;
         }
     }
 }

@@ -3,6 +3,7 @@ using BepInEx;
 using System.IO;
 using System.Reflection;
 using BepInEx.Configuration;
+using BigMouth.Utils;
 using LethalConfig;
 using LethalConfig.ConfigItems;
 using LethalConfig.ConfigItems.Options;
@@ -10,7 +11,7 @@ using UnityEngine;
 using LethalLib.Modules;
 using NetworkPrefabs = LethalLib.Modules.NetworkPrefabs;
 
-namespace BigEyes
+namespace BigMouth
 {
     [BepInPlugin(GUID, NAME, VERSION)]
     [BepInDependency("evaisa.lethallib", "0.15.1")]
@@ -26,7 +27,19 @@ namespace BigEyes
 
         public static BigMouthPlugin instance;
 
-        public ConfigEntry<int> chanceSpawnEntry;
+        public ConfigEntry<string> spawnMoonRarity;
+        
+        public ConfigEntry<float> playerDetectionDistance;
+        
+        public ConfigEntry<int> minTeethValue;
+        public ConfigEntry<int> maxTeethValue;
+        
+        public ConfigEntry<float> chaseDuration;
+        public ConfigEntry<float> attackPlayerDelay;
+        public ConfigEntry<int> attackDamage;
+        
+        public ConfigEntry<float> angrySpeed;
+        public ConfigEntry<float> angryAcceleration;
 
         void Awake()
         {
@@ -38,23 +51,84 @@ namespace BigEyes
             AssetBundle bundle = AssetBundle.LoadFromFile(assetDir);
             
             Logger.LogInfo($"BigMouth bundle found !");
-            
-            chanceSpawnEntry = Config.Bind("General", "SpawnChance", 50, "Chance for big mouth to spawn. You need to restart the game.");
-            CreateIntConfig(chanceSpawnEntry);
 
-            //bigeyes
+            RegisterConfigs();
+            RegisterMonster(bundle);
+            
+            Logger.LogInfo($"BigMouth is ready!");
+        }
+
+        void RegisterConfigs()
+        {
+                        
+            spawnMoonRarity = Config.Bind("General", "SpawnRarity", 
+                "Modded:100,ExperimentationLevel:40,AssuranceLevel:40,VowLevel:40,OffenseLevel:50,MarchLevel:50,RendLevel:100,DineLevel:100,TitanLevel:150,Adamance:90,Embrion:175,Artifice:180", 
+                "Chance for BigMouth to spawn for any moon, example => assurance:100,offense:50 . You need to restart the game.");
+
+            CreatStringConfig(spawnMoonRarity, true);
+            
+            //BEHAVIOR CONFIGS
+                        
+            playerDetectionDistance = Config.Bind("Custom Behavior", "playerDetectionDistance", 
+                4.65f, 
+                "Chance for BigMouth to spawn for any moon, example => assurance:100,offense:50 . You don't need to restart the game !");
+            CreateFloatConfig(playerDetectionDistance);
+                        
+            minTeethValue = Config.Bind("Custom Behavior", "minTeethValue", 
+                50, 
+                "Min teeth scrap item value when BigMouth die. You don't need to restart the game !");
+            CreateIntConfig(minTeethValue, 0, 500);
+                        
+            maxTeethValue = Config.Bind("Custom Behavior", "maxTeethValue", 
+                98, 
+                "Max teeth scrap item value when BigMouth die. You don't need to restart the game !");
+            CreateIntConfig(maxTeethValue, 0, 500);
+            
+            chaseDuration = Config.Bind("Custom Behavior", "chaseDuration", 
+                2f, 
+                "BigMouth chase player duration when detect one. You don't need to restart the game !");
+            CreateFloatConfig(chaseDuration);
+            
+            attackPlayerDelay = Config.Bind("Custom Behavior", "attackPlayerDelay", 
+                0.25f, 
+                "BigMouth attack player delay. You don't need to restart the game !");
+            CreateFloatConfig(attackPlayerDelay, 0f, 5f);
+            
+            attackDamage = Config.Bind("Custom Behavior", "attackPlayerDelay", 
+                5, 
+                "BigMouth attack player delay. You don't need to restart the game !");
+            CreateIntConfig(attackDamage);
+            
+            angrySpeed = Config.Bind("Custom Behavior", "angrySpeed", 
+                8f, 
+                "BigMouth speed on angry phase. See Unity NavMeshAgent for more infos. You don't need to restart the game !");
+            CreateFloatConfig(angrySpeed);
+            
+            angryAcceleration = Config.Bind("Custom Behavior", "angryAcceleration", 
+                8f, 
+                "BigMouth acceleration on angry phase. See Unity NavMeshAgent for more infos. You don't need to restart the game !");
+            CreateFloatConfig(angryAcceleration);
+        }
+        
+        void RegisterMonster(AssetBundle bundle)
+        {
+            //bigmouth
             EnemyType bigMouth = bundle.LoadAsset<EnemyType>("Assets/LethalCompany/Mods/BigMouth/BigMouth.asset");
             Logger.LogInfo($"{bigMouth.name} FOUND");
             Logger.LogInfo($"{bigMouth.enemyPrefab} prefab");
             NetworkPrefabs.RegisterNetworkPrefab(bigMouth.enemyPrefab);
             Utilities.FixMixerGroups(bigMouth.enemyPrefab);
 
-            var dic = new Dictionary<Levels.LevelTypes, int>();
-            dic.Add(Levels.LevelTypes.All, chanceSpawnEntry.Value);
-            Enemies.RegisterEnemy(bigMouth, Enemies.SpawnType.Default, dic);
+            TerminalNode terminalNodeBigEyes = new TerminalNode();
+            terminalNodeBigEyes.creatureName = "BigMouth";
+            terminalNodeBigEyes.displayText = "He's cute";
+
+            TerminalKeyword terminalKeywordBigEyes = new TerminalKeyword();
+            terminalKeywordBigEyes.word = "BigMouth";
             
             
-            Logger.LogInfo($"BigMouth is ready!");
+            RegisterUtil.RegisterEnemyWithConfig(spawnMoonRarity.Value, bigMouth,terminalNodeBigEyes , terminalKeywordBigEyes, bigMouth.PowerLevel, bigMouth.MaxCount);
+
         }
         
         
@@ -76,6 +150,15 @@ namespace BigEyes
                 Min = min,
                 Max = max,
                 RequiresRestart = true
+            });
+            LethalConfigManager.AddConfigItem(exampleSlider);
+        }
+        
+        private void CreatStringConfig(ConfigEntry<string> configEntry, bool requireRestart = false)
+        {
+            var exampleSlider = new TextInputFieldConfigItem(configEntry, new TextInputFieldOptions()
+            {
+                RequiresRestart = requireRestart
             });
             LethalConfigManager.AddConfigItem(exampleSlider);
         }
