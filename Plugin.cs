@@ -81,8 +81,8 @@ namespace BigMouth
             
             itemDisabled = Config.Bind("Special", "itemsDisabled", 
                 "Body,Apparatus,Hive,Shotgun", 
-                "Items that BigMouth cannot transform into. You need to restart the game.");
-            CreatStringConfig(itemDisabled, true);
+                "Items that BigMouth cannot transform into. You don't need to restart the game.");
+            CreatStringConfig(itemDisabled);
             
             //BEHAVIOR CONFIGS
                         

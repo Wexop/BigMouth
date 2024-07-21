@@ -63,7 +63,7 @@ public class BigMouthEnemyAI: EnemyAI
         var grabable = fakeItemGameObject.GetComponent<GrabbableObject>();
         var scanNodeFakeItem = fakeItemGameObject.GetComponentInChildren<ScanNodeProperties>();
         
-        grabable.FallToGround();
+        grabable.isInShipRoom = false;
         var pos = fakeItemGameObject.transform.localPosition + grabable.itemProperties.verticalOffset * Vector3.up;
         
         Destroy(grabable);
@@ -92,7 +92,7 @@ public class BigMouthEnemyAI: EnemyAI
             fakeItemGameObject = Instantiate(fakeObject, TeethObjectContainer.transform.position, Quaternion.identity, transform);
             fakeItemGameObject.transform.rotation = Quaternion.Euler(grabbableObject.itemProperties.restingRotation);
             var grabable = fakeItemGameObject.GetComponent<GrabbableObject>();
-                
+            grabable.isInShipRoom = false;
             var scrapNetwork = fakeItemGameObject.GetComponent<NetworkObject>();
 
             scrapNetwork.Spawn();
@@ -114,7 +114,25 @@ public class BigMouthEnemyAI: EnemyAI
 
     public void GetNetworkPrefab()
     {
-        if (BigMouthPlugin.instance.teehGameObject == null)
+        BigMouthPlugin.instance.everyScrapsItems.Clear();
+        RoundManager.Instance.currentLevel.spawnableScrap.ToList().ForEach(
+            prefab =>
+            {
+                GrabbableObject grabbableObject = prefab.spawnableItem.spawnPrefab.GetComponent<GrabbableObject>();
+                if (grabbableObject != null)
+                {
+                    if (grabbableObject.itemProperties.isScrap &&
+                        BigMouthPlugin.instance.CanTransformInItem(grabbableObject.itemProperties.itemName))
+                        BigMouthPlugin.instance.everyScrapsItems.Add(grabbableObject.itemProperties.itemName);
+                    if (grabbableObject.itemProperties.itemName == "Teeth")
+                    {
+                        BigMouthPlugin.instance.teehGameObject = prefab.spawnableItem.spawnPrefab;
+                    }
+                }
+
+            });
+        
+        /* if (BigMouthPlugin.instance.teehGameObject == null)
         {
             NetworkManager.NetworkConfig.Prefabs.NetworkPrefabsLists.ForEach(
                 list => list.PrefabList.ToList().ForEach(
@@ -132,7 +150,7 @@ public class BigMouthEnemyAI: EnemyAI
 
                     }) 
             );
-        }
+        }*/
     }
 
     public GameObject FindNetworkGameObject(string itemName)
@@ -140,7 +158,21 @@ public class BigMouthEnemyAI: EnemyAI
 
         GameObject gameObject = BigMouthPlugin.instance.teehGameObject;
         
-        NetworkManager.NetworkConfig.Prefabs.NetworkPrefabsLists.ForEach(
+        RoundManager.Instance.currentLevel.spawnableScrap.ToList().ForEach(
+            prefab =>
+            {
+                GrabbableObject grabbableObject = prefab.spawnableItem.spawnPrefab.GetComponent<GrabbableObject>();
+                if (grabbableObject != null)
+                {
+                    if (grabbableObject.itemProperties.itemName == itemName)
+                    {
+                        gameObject = prefab.spawnableItem.spawnPrefab;
+                    }
+                }
+
+            });
+        
+       /* NetworkManager.NetworkConfig.Prefabs.NetworkPrefabsLists.ForEach(
             list => list.PrefabList.ToList().ForEach(
                 prefab =>
                 {
@@ -154,7 +186,7 @@ public class BigMouthEnemyAI: EnemyAI
                     } 
 
                 }) 
-        );
+        ); */
 
         return gameObject;
     }
