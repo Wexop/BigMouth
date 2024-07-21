@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using BepInEx;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using BepInEx.Configuration;
 using BigMouth.Utils;
@@ -43,6 +44,7 @@ namespace BigMouth
         public ConfigEntry<float> angryAcceleration;
 
         public ConfigEntry<bool> canBeEveryItem;
+        public ConfigEntry<string> itemDisabled;
 
         void Awake()
         {
@@ -72,10 +74,15 @@ namespace BigMouth
             
             //SPECIAL
             
-            canBeEveryItem = Config.Bind("Custom Behavior", "canBeEveryItem", 
+            canBeEveryItem = Config.Bind("Special", "canBeEveryItem", 
                 false, 
                 "Big Mouth can transform into any scrap items, even modded one. You don't need to restart the game !");
             CreateBoolConfig(canBeEveryItem);
+            
+            itemDisabled = Config.Bind("Special", "itemsDisabled", 
+                "Body,Apparatus,Hive,Shotgun", 
+                "Items that BigMouth cannot transform into. You need to restart the game.");
+            CreatStringConfig(itemDisabled, true);
             
             //BEHAVIOR CONFIGS
                         
@@ -180,6 +187,37 @@ namespace BigMouth
                 RequiresRestart = requireRestart
             });
             LethalConfigManager.AddConfigItem(exampleSlider);
+        }
+
+        public bool CanTransformInItem(string name)
+        {
+
+            bool enabled = true;
+            
+            var searchItem = name.ToLower();
+
+            while (searchItem.Contains(" "))
+            {
+                searchItem = searchItem.Replace(" ", "");
+            }
+
+            var itemsNames = itemDisabled.Value.Split(",");
+            foreach (var itemsName in itemsNames)
+            {
+                var nameOfItem = itemsName.ToLower();
+
+                while (nameOfItem.Contains(" "))
+                {
+                    nameOfItem = nameOfItem.Replace(" ", "");
+                }
+
+                if (nameOfItem.Contains(searchItem)) enabled = false;
+
+            }
+
+            return enabled;
+
+
         }
 
 

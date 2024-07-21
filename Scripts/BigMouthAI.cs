@@ -59,13 +59,24 @@ public class BigMouthEnemyAI: EnemyAI
     public void SetFakeItemClient(GameObject gameObject)
     {
         fakeItemGameObject = gameObject;
-        Debug.Log($"ROTATION {gameObject.transform.localEulerAngles} EULER {gameObject.transform.eulerAngles}");
+
         var grabable = fakeItemGameObject.GetComponent<GrabbableObject>();
-        grabable.parentObject = null;
-        grabable.targetFloorPosition += Vector3.up * 3; 
+        var scanNodeFakeItem = fakeItemGameObject.GetComponentInChildren<ScanNodeProperties>();
+        
+        grabable.FallToGround();
+        var pos = fakeItemGameObject.transform.localPosition + grabable.itemProperties.verticalOffset * Vector3.up;
+        
+        Destroy(grabable);
+
+        fakeItemGameObject.transform.localPosition = pos;
+        
+        fakeItemGameObject.transform.parent = transform;
+        fakeItemGameObject.tag = "PhysicsProp";
+        fakeItemGameObject.layer = LayerMask.NameToLayer("Props");
+        scanNodeFakeItem.tag = "DoNotSet";
+        scanNodeFakeItem.gameObject.layer = LayerMask.NameToLayer("ScanNode");;
         
         
-        //fakeItemGameObject.transform.localEulerAngles = gameObject.transform.localEulerAngles;
         scanNode.gameObject.SetActive(false);
         haveAFakeItem = true;
         ChangeFakeItemState(false);
@@ -76,11 +87,14 @@ public class BigMouthEnemyAI: EnemyAI
         if(IsServer)
         {
             var fakeObject = FindNetworkGameObject(name);
+            GrabbableObject grabbableObject = fakeObject.GetComponent<GrabbableObject>();
+
             fakeItemGameObject = Instantiate(fakeObject, TeethObjectContainer.transform.position, Quaternion.identity, transform);
+            fakeItemGameObject.transform.rotation = Quaternion.Euler(grabbableObject.itemProperties.restingRotation);
+            var grabable = fakeItemGameObject.GetComponent<GrabbableObject>();
                 
             var scrapNetwork = fakeItemGameObject.GetComponent<NetworkObject>();
-            var grabable = fakeItemGameObject.GetComponent<GrabbableObject>();
-            grabable.parentObject = TeethObjectContainer.transform.parent;
+
             scrapNetwork.Spawn();
 
             var scrapMutliplier = RoundManager.Instance.scrapValueMultiplier;
@@ -109,7 +123,7 @@ public class BigMouthEnemyAI: EnemyAI
                         GrabbableObject grabbableObject = prefab.Prefab.GetComponent<GrabbableObject>();
                         if (grabbableObject != null)
                         {
-                            if(grabbableObject.itemProperties.isScrap) BigMouthPlugin.instance.everyScrapsItems.Add(grabbableObject.itemProperties.itemName);
+                            if(grabbableObject.itemProperties.isScrap && BigMouthPlugin.instance.CanTransformInItem(grabbableObject.itemProperties.itemName)) BigMouthPlugin.instance.everyScrapsItems.Add(grabbableObject.itemProperties.itemName);
                             if (grabbableObject.itemProperties.itemName == "Teeth")
                             {
                                 BigMouthPlugin.instance.teehGameObject = prefab.Prefab;
@@ -152,6 +166,7 @@ public class BigMouthEnemyAI: EnemyAI
         agent.stoppingDistance = 1f;
 
         GetNetworkPrefab();
+        FindNetworkGameObject("Teeth");
 
         if (IsServer)
         {
