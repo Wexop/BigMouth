@@ -106,6 +106,8 @@ public class NetworkBigMouth
         {
             Debug.Log($"TEETH FOUND {networkId} SET VALUE {value}");
             grabbableObjectFound.SetScrapValue(value);
+            ScanNodeProperties scanNodeProperties = grabbableObjectFound.GetComponentInChildren<ScanNodeProperties>();
+            scanNodeProperties.headerText = "BigMouth body";
         }
     }
 }

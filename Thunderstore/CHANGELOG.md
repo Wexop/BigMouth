@@ -1,5 +1,10 @@
 # Changelog
 
+### v1.1.1
+
+- Fix an issue where BigMouth die but no item spawn and his body stay on the floor
+- Teeth dropped by BigMouth when he dies is now called "BigMouth body"
+
 ### v1.1.0
 
 - Add a lots of configs to custom BigMouth behavior

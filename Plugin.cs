@@ -22,7 +22,7 @@ namespace BigMouth
 
         const string GUID = "wexop.bigmouth";
         const string NAME = "BigMouth";
-        const string VERSION = "1.1.0";
+        const string VERSION = "1.1.1";
 
         public GameObject teehGameObject;
         public List<string> everyScrapsItems = new List<string>();
