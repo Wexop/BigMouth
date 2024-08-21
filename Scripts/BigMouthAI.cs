@@ -115,7 +115,7 @@ public class BigMouthEnemyAI: EnemyAI
     public void GetNetworkPrefab()
     {
         BigMouthPlugin.instance.everyScrapsItems.Clear();
-        RoundManager.Instance.currentLevel.spawnableScrap.ToList().ForEach(
+        RoundManager.Instance.currentLevel.spawnableScrap?.ToList().ForEach(
             prefab =>
             {
                 GrabbableObject grabbableObject = prefab.spawnableItem.spawnPrefab.GetComponent<GrabbableObject>();
@@ -130,8 +130,8 @@ public class BigMouthEnemyAI: EnemyAI
         
         if (BigMouthPlugin.instance.teehGameObject == null)
         {
-            NetworkManager.NetworkConfig.Prefabs.NetworkPrefabsLists.ForEach(
-                list => list.PrefabList.ToList().ForEach(
+            NetworkManager.NetworkConfig.Prefabs.NetworkPrefabsLists?.ForEach(
+                list => list.PrefabList?.ToList().ForEach(
                     prefab =>
                     {
                         GrabbableObject grabbableObject = prefab.Prefab.GetComponent<GrabbableObject>();
