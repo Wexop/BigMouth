@@ -7,7 +7,7 @@ using Unity.Netcode;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace BigEyes.Scripts;
+namespace BigMouth.Scripts;
 
 [StaticNetcode]
 public class NetworkBigMouth

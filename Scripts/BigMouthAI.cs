@@ -9,7 +9,7 @@ using Unity.Netcode;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-namespace BigEyes.Scripts;
+namespace BigMouth.Scripts;
 
 public class BigMouthEnemyAI: EnemyAI
 {
