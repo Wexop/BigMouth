@@ -1,5 +1,9 @@
 # Changelog
 
+### v1.1.2
+
+- Recompile the code to be compatible with v 73
+
 ### v1.1.1
 
 - Fix an issue where BigMouth die but no item spawn and his body stay on the floor

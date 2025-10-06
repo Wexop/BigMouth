@@ -1,5 +1,6 @@
 ﻿using System;
 using BigMouth;
+using BigMouth.Scripts;
 using UnityEngine;
 
 namespace BigEyes.Scripts;
