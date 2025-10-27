@@ -1,9 +1,6 @@
-﻿using System;
-using BigMouth;
-using BigMouth.Scripts;
-using UnityEngine;
+﻿using UnityEngine;
 
-namespace BigEyes.Scripts;
+namespace BigMouth.Scripts;
 
 public class BigMouthPlayerDetection: MonoBehaviour
 {

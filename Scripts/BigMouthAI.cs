@@ -1,10 +1,7 @@
-﻿
-using System;
-using GameNetcodeStuff;
+﻿using GameNetcodeStuff;
 using JetBrains.Annotations;
 using System.Collections;
 using System.Linq;
-using BigMouth;
 using Unity.Netcode;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -28,7 +25,7 @@ public class BigMouthEnemyAI: EnemyAI
     private int value;
     
     private float attackPlayerTimer = 0;
-    private float chasePlayerTimer = BigMouthPlugin.instance.chaseDuration.Value;
+    private float chasePlayerTimer = 0;
     public float aiInterval;
     public bool isPlayerClose;
     
@@ -262,10 +259,11 @@ public class BigMouthEnemyAI: EnemyAI
         {
             var player = other.GetComponent<PlayerControllerB>();
             if(player == null || player.isPlayerDead || isEnemyDead) return;
+
             if(PlayerIsTargetable(player))
             {
                 chasePlayerTimer = BigMouthPlugin.instance.chaseDuration.Value;
-                SetMovingTowardsTargetPlayer(player);
+                targetPlayer = player;
                 SwitchToBehaviourClientRpc(1);
             }
         }
